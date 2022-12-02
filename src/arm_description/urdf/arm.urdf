@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<robot name="armstrong_m3">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="1.67 0.71 0.31"/>
+      </geometry>
+    </visual>
+    <collision>
+    </collision>
+  </link>
+</robot>
+
