@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   arm_master_comm.msg
+  arm_dynamixel_state.msg
+  arm_joint_state.msg
+  arm_robot_state.msg
 )
 
 generate_messages(
