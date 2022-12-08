@@ -17,6 +17,24 @@ def sub_cmd_input():
     def cb_cmd_input(data: arm_master_comm) -> None:
         lock.acquire()
         robot_state.input_command = data
+
+        robot_state.L1.goal_pos = data.L1
+        robot_state.L2.goal_pos = data.L2
+        robot_state.L3.goal_pos = data.L3
+        robot_state.L4.goal_pos = data.L4
+        robot_state.L5.goal_pos = data.L5
+        robot_state.L6.goal_pos = data.L6
+        robot_state.L7.goal_pos = data.L7
+        robot_state.L8.goal_pos = data.L8
+
+        robot_state.R1.goal_pos = data.R1
+        robot_state.R2.goal_pos = data.R2
+        robot_state.R3.goal_pos = data.R3
+        robot_state.R4.goal_pos = data.R4
+        robot_state.R5.goal_pos = data.R5
+        robot_state.R6.goal_pos = data.R6
+        robot_state.R7.goal_pos = data.R7
+        robot_state.R8.goal_pos = data.R8
         lock.release()
 
     rospy.Subscriber("cmd_input", arm_master_comm, callback=cb_cmd_input)
@@ -138,28 +156,27 @@ def get_encoder_data():
             robot_state.R7.present_pos = position[14]
             robot_state.R8.present_pos = position[15]
 
-            ### 이전 각도 저장하기 L & R
-            robot_state.L1.previous_pos = previous_position[0]
-            robot_state.L2.previous_pos = previous_position[1]
-            robot_state.L3.previous_pos = previous_position[2]
-            robot_state.L4.previous_pos = previous_position[3]
-            robot_state.L5.previous_pos = previous_position[4]
-            robot_state.L6.previous_pos = previous_position[5]
-            robot_state.L7.previous_pos = previous_position[6]
-            robot_state.L8.previous_pos = previous_position[7]
+            ### 위치 에러 계산하기
+            robot_state.L1.error = position[0] - robot_state.L1.goal_pos
+            robot_state.L2.error = position[1] - robot_state.L2.goal_pos
+            robot_state.L3.error = position[2] - robot_state.L3.goal_pos
+            robot_state.L4.error = position[3] - robot_state.L4.goal_pos
+            robot_state.L5.error = position[4] - robot_state.L5.goal_pos
+            robot_state.L6.error = position[5] - robot_state.L6.goal_pos
+            robot_state.L7.error = position[6] - robot_state.L7.goal_pos
+            robot_state.L8.error = position[7] - robot_state.L8.goal_pos
 
-            robot_state.R1.previous_pos = previous_position[8]
-            robot_state.R2.previous_pos = previous_position[9]
-            robot_state.R3.previous_pos = previous_position[10]
-            robot_state.R4.previous_pos = previous_position[11]
-            robot_state.R5.previous_pos = previous_position[12]
-            robot_state.R6.previous_pos = previous_position[13]
-            robot_state.R7.previous_pos = previous_position[14]
-            robot_state.R8.previous_pos = previous_position[15]
+            robot_state.R1.error = position[8] - robot_state.R1.goal_pos
+            robot_state.R2.error = position[9] - robot_state.R2.goal_pos
+            robot_state.R3.error = position[10] - robot_state.R3.goal_pos
+            robot_state.R4.error = position[11] - robot_state.R4.goal_pos
+            robot_state.R5.error = position[12] - robot_state.R5.goal_pos
+            robot_state.R6.error = position[13] - robot_state.R6.goal_pos
+            robot_state.R7.error = position[14] - robot_state.R7.goal_pos
+            robot_state.R8.error = position[15] - robot_state.R8.goal_pos
+
             lock.release()
 
-            for i in range(len(_CUI_ADDR)):
-                previous_position[i] = position[i]
         except Exception as e:
             rospy.logerr(f"Error occured during on get_encoder_data error meg : {e}")
             """
