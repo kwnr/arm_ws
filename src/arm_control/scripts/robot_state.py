@@ -57,10 +57,12 @@ def pub_robot_state():
 def get_encoder_data():
     rospy.loginfo("Receiving encoder thread is running...")
     import serial
-    _serial_port_name = "/dev/tty0"
+    _serial_port_name = "/dev/ttyUSB0"
     _CUI_ADDR = [b'\x0C', b'\x1C', b'\x2C', b'\x3C', b'\x4C', b'\x5C',        # CUI Encoder 주소
                 b'\x6C', b'\x7C', b'\x8C', b'\x9C', b'\xAC', b'\xBC',
                 b'\xCC', b'\xDC', b'\xEC', b'\xFC']
+
+    serial_slave_encoder = None
 
     try:
         rospy.loginfo(f"Trying to open port name : {_serial_port_name}.")
@@ -116,22 +118,23 @@ def get_encoder_data():
     previous_position = [0]*16
 
     while not rospy.is_shutdown():
-        read_encoder_rate = rospy.Rate(1000)
+        read_encoder_rate = rospy.Rate(10)
         try:
             """
             실제코드
             # """
-            # for i in _CUI_ADDR:
-            #     input_val = serial_slave_encoder.read(2)
-            #     if not checkSum(input_val):     ## 체크섬에 이상이 잇을 때
-            #         position[(i[0]-12)//16] = 999999
-            #         continue
-            #     position[(i[0]-12)//16] = getEnc(input_val, (i[0]-12)//16) # 수신 데이터를 (i[0]-12)//16번 리스트에 저장
+            for i in _CUI_ADDR:
+                input_val = serial_slave_encoder.read(2)
+                print(input_val)
+                if not checkSum(input_val):     ## 체크섬에 이상이 잇을 때
+                    position[(i[0]-12)//16] = 999999
+                    continue
+                position[(i[0]-12)//16] = getEnc(input_val, (i[0]-12)//16) # 수신 데이터를 (i[0]-12)//16번 리스트에 저장
             """
             테스팅
             """
-            import random
-            position = [random.random() for _ in range(16)]
+            # import random
+            # position = [random.random() for _ in range(16)]
 
             """
             ROS ROBOT STATE 토픽에 얻어온 각도 값 저장하기.
