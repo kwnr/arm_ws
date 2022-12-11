@@ -2,7 +2,6 @@
 
 import rospy
 import threading
-import time
 from arm_msgs.msg import arm_master_comm
 from arm_msgs.msg import arm_robot_state
 
@@ -117,8 +116,8 @@ def get_encoder_data():
     position = [0]*16
     previous_position = [0]*16
 
+    read_encoder_rate = rospy.Rate(100)
     while not rospy.is_shutdown():
-        read_encoder_rate = rospy.Rate(10)
         try:
             """
             실제코드
@@ -182,10 +181,11 @@ def get_encoder_data():
 
         except Exception as e:
             rospy.logerr(f"Error occured during on get_encoder_data error meg : {e}")
-            """
-            쓰레드 이상이 있을 때, Robotis 중립하는 코드가 필요 아래에!
-            """
             # 여기
+        
+        except KeyboardInterrupt as ke:
+            rospy.logerr(ke+f" | Closing {_serial_port_name}...")
+            serial_slave_encoder.close()
 
         read_encoder_rate.sleep()
 
