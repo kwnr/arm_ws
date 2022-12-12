@@ -11,6 +11,101 @@ lock = threading.Lock()
 cmd_input = arm_master_comm()
 robot_state = arm_robot_state()
 
+### ROS Parameter 확인하는 함수
+def ros_param_chek(robot_state: arm_robot_state):
+    gain_p_left = [0] * 8
+    gain_i_left = [0] * 8
+    gain_d_left = [0] * 8
+
+    gain_p_right = [0] * 8
+    gain_i_right = [0] * 8
+    gain_d_right = [0] * 8
+
+    prefix_str = '/joint_controller_params/'
+
+    for i in range(8):
+        try:
+            gain_p_left[i] = rospy.get_param(prefix_str +'L'+ str(i+1) + '/' + 'p')
+            gain_i_left[i] = rospy.get_param(prefix_str +'L'+ str(i+1) + '/' + 'i')
+            gain_d_left[i] = rospy.get_param(prefix_str +'L'+ str(i+1) + '/' + 'd')
+
+            gain_p_right[i] = rospy.get_param(prefix_str +'R'+ str(i+1) + '/' + 'p')
+            gain_i_right[i] = rospy.get_param(prefix_str +'R'+ str(i+1) + '/' + 'i')
+            gain_d_right[i] = rospy.get_param(prefix_str +'R'+ str(i+1) + '/' + 'd')
+
+        except:
+            rospy.logwarn("Joint controller gain is not defined! load default gains... (check yaml file)")
+            print(prefix_str +'R'+ str(i+1) + 'd')
+            gain_p_left = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]
+            gain_p_right = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]
+
+            gain_d_left = [0.2, 0.3, 0.3, 0.45, 0.1, 0.1, 0, 0]
+            gain_d_right = [0.2, 0.3, 0.3, 0.45, 0.1, 0.1, 0, 0]
+
+            gain_i_left = [0.01] * 8
+            gain_i_right = [0.01] * 8
+    
+    lock.acquire()
+
+    ### P gains
+    robot_state.L1.p_gain = gain_p_left[0]
+    robot_state.L2.p_gain = gain_p_left[1]
+    robot_state.L3.p_gain = gain_p_left[2]
+    robot_state.L4.p_gain = gain_p_left[3]
+    robot_state.L5.p_gain = gain_p_left[4]
+    robot_state.L6.p_gain = gain_p_left[5]
+    robot_state.L7.p_gain = gain_p_left[6]
+    robot_state.L8.p_gain = gain_p_left[7]
+
+    robot_state.R1.p_gain = gain_p_right[0]
+    robot_state.R2.p_gain = gain_p_right[1]
+    robot_state.R3.p_gain = gain_p_right[2]
+    robot_state.R4.p_gain = gain_p_right[3]
+    robot_state.R5.p_gain = gain_p_right[4]
+    robot_state.R6.p_gain = gain_p_right[5]
+    robot_state.R7.p_gain = gain_p_right[6]
+    robot_state.R8.p_gain = gain_p_right[7]
+
+    ### I gains
+    robot_state.L1.i_gain = gain_i_left[0]
+    robot_state.L2.i_gain = gain_i_left[1]
+    robot_state.L3.i_gain = gain_i_left[2]
+    robot_state.L4.i_gain = gain_i_left[3]
+    robot_state.L5.i_gain = gain_i_left[4]
+    robot_state.L6.i_gain = gain_i_left[5]
+    robot_state.L7.i_gain = gain_i_left[6]
+    robot_state.L8.i_gain = gain_i_left[7]
+
+    robot_state.R1.i_gain = gain_i_right[0]
+    robot_state.R2.i_gain = gain_i_right[1]
+    robot_state.R3.i_gain = gain_i_right[2]
+    robot_state.R4.i_gain = gain_i_right[3]
+    robot_state.R5.i_gain = gain_i_right[4]
+    robot_state.R6.i_gain = gain_i_right[5]
+    robot_state.R7.i_gain = gain_i_right[6]
+    robot_state.R8.i_gain = gain_i_right[7]
+
+    # D gains
+    robot_state.L1.d_gain = gain_d_left[0]
+    robot_state.L2.d_gain = gain_d_left[1]
+    robot_state.L3.d_gain = gain_d_left[2]
+    robot_state.L4.d_gain = gain_d_left[3]
+    robot_state.L5.d_gain = gain_d_left[4]
+    robot_state.L6.d_gain = gain_d_left[5]
+    robot_state.L7.d_gain = gain_d_left[6]
+    robot_state.L8.d_gain = gain_d_left[7]
+
+    robot_state.R1.d_gain = gain_d_right[0]
+    robot_state.R2.d_gain = gain_d_right[1]
+    robot_state.R3.d_gain = gain_d_right[2]
+    robot_state.R4.d_gain = gain_d_right[3]
+    robot_state.R5.d_gain = gain_d_right[4]
+    robot_state.R6.d_gain = gain_d_right[5]
+    robot_state.R7.d_gain = gain_d_right[6]
+    robot_state.R8.d_gain = gain_d_right[7]
+
+    lock.release()
+
 ### Master 토픽 구독 및 상태 정보에 씌우는 콜백함수
 def sub_cmd_input(robot_state: arm_robot_state):
     def cb_cmd_input(data: arm_master_comm) -> None:
@@ -68,7 +163,7 @@ def get_encoder_data(robot_state: arm_robot_state):
         serial_slave_encoder = serial.Serial(_serial_port_name, 2000000)
         rospy.loginfo(f"{_serial_port_name} port is opened!")
     except:
-        rospy.logerr(f"fail to open {_serial_port_name}.")
+        rospy.logerr(f"Fail to open {_serial_port_name}. (The encoder serial communications)")
         # return
 
     ## 슬레이브 Encoder 값을 Degree로 변환
@@ -117,11 +212,9 @@ def get_encoder_data(robot_state: arm_robot_state):
     previous_position = [0.0]*16
 
     read_encoder_rate = rospy.Rate(100)
+
     while not rospy.is_shutdown():
         try:
-            """
-            실제코드
-            # """
             for i in _CUI_ADDR:
                 serial_slave_encoder.write(i)
                 input_val = serial_slave_encoder.read(2)
@@ -129,16 +222,9 @@ def get_encoder_data(robot_state: arm_robot_state):
                     position[(i[0]-12)//16] = None
                     continue
                 position[(i[0]-12)//16] = getEnc(input_val, (i[0]-12)//16) # 수신 데이터를 (i[0]-12)//16번 리스트에 저장
-            """
-            테스팅
-            """
-            # import random
-            # position = [random.random() for _ in range(16)]
 
-            """
-            ROS ROBOT STATE 토픽에 얻어온 각도 값 저장하기.
-            """
             lock.acquire()
+
             ### 현재 각도 저장하기 L & R
             robot_state.R1.present_pos = position[0]
             robot_state.R2.present_pos = position[1]
@@ -177,25 +263,7 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L7.error = position[14] - robot_state.L7.goal_pos
             robot_state.L8.error = position[15] - robot_state.L8.goal_pos
             
-            ### d-error
-            # robot_state.R1.d_error = robot_state.R1.error - robot_state.R1.d_error
-            # robot_state.R2.d_error = robot_state.R2.error - robot_state.R2.d_error
-            # robot_state.R3.d_error = robot_state.R3.error - robot_state.R3.d_error
-            # robot_state.R4.d_error = robot_state.R4.error - robot_state.R4.d_error
-            # robot_state.R5.d_error = robot_state.R5.error - robot_state.R5.d_error
-            # robot_state.R6.d_error = robot_state.R6.error - robot_state.R6.d_error
-            # robot_state.L1.d_error = robot_state.L1.error - robot_state.L1.d_error
-            # robot_state.L2.d_error = robot_state.L2.error - robot_state.L2.d_error
-            # robot_state.L3.d_error = robot_state.L3.error - robot_state.L3.d_error
-            # robot_state.L4.d_error = robot_state.L4.error - robot_state.L4.d_error
-            # robot_state.L5.d_error = robot_state.L5.error - robot_state.L5.d_error
-            # robot_state.L6.d_error = robot_state.L6.error - robot_state.L6.d_error
-
-            # robot_state.R7.d_error = robot_state.R7.error - robot_state.R7.d_error
-            # robot_state.R8.d_error = robot_state.R8.error - robot_state.R8.d_error
-            # robot_state.L7.d_error = robot_state.L7.error - robot_state.L7.d_error
-            # robot_state.L8.d_error = robot_state.L8.error - robot_state.L8.d_error
-
+            ### D-error 계산하기
             robot_state.R1.d_error = position[0] - previous_position[0]
             robot_state.R2.d_error = position[1] - previous_position[1]
             robot_state.R3.d_error = position[2] - previous_position[2]
@@ -214,7 +282,7 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L7.d_error = position[14] - previous_position[14]
             robot_state.L8.d_error = position[15] - previous_position[15]
         
-            ### i-error
+            ### I-error 계산하기
             robot_state.R1.i_error = max(-100, min(robot_state.R1.i_error + robot_state.R1.error, 100))
             robot_state.R2.i_error = max(-100, min(robot_state.R2.i_error + robot_state.R2.error, 100))
             robot_state.R3.i_error = max(-100, min(robot_state.R3.i_error + robot_state.R3.error, 100))
@@ -238,8 +306,8 @@ def get_encoder_data(robot_state: arm_robot_state):
             previous_position = position
 
         except Exception as e:
-            rospy.logerr(f"Error occured during on get_encoder_data error meg : {e}")
-            # 여기
+            rospy.logerr(f"Error occured during on get_encoder_data! **RESTART ROBOT STATE NODE** : {e}")
+            break
         
         except KeyboardInterrupt as ke:
             rospy.logerr(ke+f" | Closing {_serial_port_name}...")
@@ -252,6 +320,10 @@ def get_encoder_data(robot_state: arm_robot_state):
 if __name__ == '__main__':
     rospy.init_node('arm_state_monitoring')
     rospy.loginfo("armstrong robot state node start...")
+
+    ### System Config 파일 받아오는 함수
+    th_ros_param_chek = threading.Thread(target=ros_param_chek, args=(robot_state,))
+    th_ros_param_chek.start()
 
     ### Master 조작 신호를 받는 쓰레드 생성
     th_sub_cmd_input = threading.Thread(target=sub_cmd_input, args=(robot_state,))

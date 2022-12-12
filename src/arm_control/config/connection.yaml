@@ -1,0 +1,6 @@
+robot_connection_params:
+  master_port: "/dev/ttyUSB0"
+
+  robot_encoder_port: "/dev/ttyUSB1"
+
+  robot_dynamixel_port: "/dev/ttyUSB2"

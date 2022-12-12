@@ -9,4 +9,3 @@ float32 d_error
 float32 i_error
 
 float32 calculated_voltage
-float32 measured_voltage
