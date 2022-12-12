@@ -13,6 +13,8 @@ robot_state = arm_robot_state()
 
 ### ROS Parameter 확인하는 함수
 def ros_param_chek(robot_state: arm_robot_state):
+    rospy.loginfo("Checking predefined config list...")
+
     gain_p_left = [0] * 8
     gain_i_left = [0] * 8
     gain_d_left = [0] * 8
@@ -105,6 +107,10 @@ def ros_param_chek(robot_state: arm_robot_state):
     robot_state.R8.d_gain = gain_d_right[7]
 
     lock.release()
+
+    rospy.loginfo("Load controller configs Done...")
+
+    rospy.loginfo("Load connection configs Done...")
 
 ### Master 토픽 구독 및 상태 정보에 씌우는 콜백함수
 def sub_cmd_input(robot_state: arm_robot_state):
@@ -319,7 +325,7 @@ def get_encoder_data(robot_state: arm_robot_state):
 
 if __name__ == '__main__':
     rospy.init_node('arm_state_monitoring')
-    rospy.loginfo("armstrong robot state node start...")
+    rospy.loginfo("Armstrong robot state node start...")
 
     ### System Config 파일 받아오는 함수
     th_ros_param_chek = threading.Thread(target=ros_param_chek, args=(robot_state,))
