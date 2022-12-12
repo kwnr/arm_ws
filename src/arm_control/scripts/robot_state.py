@@ -12,7 +12,7 @@ cmd_input = arm_master_comm()
 robot_state = arm_robot_state()
 
 ### Master 토픽 구독 및 상태 정보에 씌우는 콜백함수
-def sub_cmd_input():
+def sub_cmd_input(robot_state: arm_robot_state):
     def cb_cmd_input(data: arm_master_comm) -> None:
         lock.acquire()
         robot_state.input_command = data
@@ -39,7 +39,7 @@ def sub_cmd_input():
     rospy.Subscriber("cmd_input", arm_master_comm, callback=cb_cmd_input)
 
 ### Robot State 발행을 위한 함수
-def pub_robot_state():
+def pub_robot_state(robot_state: arm_robot_state):
     rospy.loginfo("Robot state publishing thread is running...")
     pub_rate = rospy.Rate(500)
     robot_state_pub = rospy.Publisher("robot_state", arm_robot_state, queue_size=10)
@@ -53,10 +53,10 @@ def pub_robot_state():
         pub_rate.sleep()
 
 ### CUI 인코더 정보를 받아서 데이터를 Robot State 토픽에 씌우는 함수
-def get_encoder_data():
+def get_encoder_data(robot_state: arm_robot_state):
     rospy.loginfo("Receiving encoder thread is running...")
     import serial
-    _serial_port_name = "/dev/ttyUSB0"
+    _serial_port_name = "/dev/ttyUSB1"
     _CUI_ADDR = [b'\x0C', b'\x1C', b'\x2C', b'\x3C', b'\x4C', b'\x5C',        # CUI Encoder 주소
                 b'\x6C', b'\x7C', b'\x8C', b'\x9C', b'\xAC', b'\xBC',
                 b'\xCC', b'\xDC', b'\xEC', b'\xFC']
@@ -114,7 +114,7 @@ def get_encoder_data():
             return False
 
     position = [0]*16
-    previous_position = [0]*16
+    previous_position = [0.0]*16
 
     read_encoder_rate = rospy.Rate(100)
     while not rospy.is_shutdown():
@@ -123,10 +123,10 @@ def get_encoder_data():
             실제코드
             # """
             for i in _CUI_ADDR:
+                serial_slave_encoder.write(i)
                 input_val = serial_slave_encoder.read(2)
-                print(input_val)
                 if not checkSum(input_val):     ## 체크섬에 이상이 잇을 때
-                    position[(i[0]-12)//16] = 999999
+                    position[(i[0]-12)//16] = None
                     continue
                 position[(i[0]-12)//16] = getEnc(input_val, (i[0]-12)//16) # 수신 데이터를 (i[0]-12)//16번 리스트에 저장
             """
@@ -140,44 +140,102 @@ def get_encoder_data():
             """
             lock.acquire()
             ### 현재 각도 저장하기 L & R
-            robot_state.L1.present_pos = position[0]
-            robot_state.L2.present_pos = position[1]
-            robot_state.L3.present_pos = position[2]
-            robot_state.L4.present_pos = position[3]
-            robot_state.L5.present_pos = position[4]
-            robot_state.L6.present_pos = position[5]
-            robot_state.L7.present_pos = position[6]
-            robot_state.L8.present_pos = position[7]
+            robot_state.R1.present_pos = position[0]
+            robot_state.R2.present_pos = position[1]
+            robot_state.R3.present_pos = position[2]
+            robot_state.R4.present_pos = position[3]
+            robot_state.R5.present_pos = position[4]
+            robot_state.R6.present_pos = position[5]
+            robot_state.L1.present_pos = position[6]
+            robot_state.L2.present_pos = position[7]
+            robot_state.L3.present_pos = position[8]
+            robot_state.L4.present_pos = position[9]
+            robot_state.L5.present_pos = position[10]
+            robot_state.L6.present_pos = position[11]
 
-            robot_state.R1.present_pos = position[8]
-            robot_state.R2.present_pos = position[9]
-            robot_state.R3.present_pos = position[10]
-            robot_state.R4.present_pos = position[11]
-            robot_state.R5.present_pos = position[12]
-            robot_state.R6.present_pos = position[13]
-            robot_state.R7.present_pos = position[14]
-            robot_state.R8.present_pos = position[15]
+            robot_state.R7.present_pos = position[12]
+            robot_state.R8.present_pos = position[13]
+            robot_state.L7.present_pos = position[14]
+            robot_state.L8.present_pos = position[15]
 
             ### 위치 에러 계산하기
-            robot_state.L1.error = position[0] - robot_state.L1.goal_pos
-            robot_state.L2.error = position[1] - robot_state.L2.goal_pos
-            robot_state.L3.error = position[2] - robot_state.L3.goal_pos
-            robot_state.L4.error = position[3] - robot_state.L4.goal_pos
-            robot_state.L5.error = position[4] - robot_state.L5.goal_pos
-            robot_state.L6.error = position[5] - robot_state.L6.goal_pos
-            robot_state.L7.error = position[6] - robot_state.L7.goal_pos
-            robot_state.L8.error = position[7] - robot_state.L8.goal_pos
+            robot_state.R1.error = position[0] - robot_state.R1.goal_pos
+            robot_state.R2.error = position[1] - robot_state.R2.goal_pos
+            robot_state.R3.error = position[2] - robot_state.R3.goal_pos
+            robot_state.R4.error = position[3] - robot_state.R4.goal_pos
+            robot_state.R5.error = position[4] - robot_state.R5.goal_pos
+            robot_state.R6.error = position[5] - robot_state.R6.goal_pos
+            robot_state.L1.error = position[6] - robot_state.L1.goal_pos
+            robot_state.L2.error = position[7] - robot_state.L2.goal_pos
+            robot_state.L3.error = position[8] - robot_state.L3.goal_pos
+            robot_state.L4.error = position[9] - robot_state.L4.goal_pos
+            robot_state.L5.error = position[10] - robot_state.L5.goal_pos
+            robot_state.L6.error = position[11] - robot_state.L6.goal_pos
 
-            robot_state.R1.error = position[8] - robot_state.R1.goal_pos
-            robot_state.R2.error = position[9] - robot_state.R2.goal_pos
-            robot_state.R3.error = position[10] - robot_state.R3.goal_pos
-            robot_state.R4.error = position[11] - robot_state.R4.goal_pos
-            robot_state.R5.error = position[12] - robot_state.R5.goal_pos
-            robot_state.R6.error = position[13] - robot_state.R6.goal_pos
-            robot_state.R7.error = position[14] - robot_state.R7.goal_pos
-            robot_state.R8.error = position[15] - robot_state.R8.goal_pos
+            robot_state.R7.error = position[12] - robot_state.R7.goal_pos
+            robot_state.R8.error = position[13] - robot_state.R8.goal_pos
+            robot_state.L7.error = position[14] - robot_state.L7.goal_pos
+            robot_state.L8.error = position[15] - robot_state.L8.goal_pos
+            
+            ### d-error
+            # robot_state.R1.d_error = robot_state.R1.error - robot_state.R1.d_error
+            # robot_state.R2.d_error = robot_state.R2.error - robot_state.R2.d_error
+            # robot_state.R3.d_error = robot_state.R3.error - robot_state.R3.d_error
+            # robot_state.R4.d_error = robot_state.R4.error - robot_state.R4.d_error
+            # robot_state.R5.d_error = robot_state.R5.error - robot_state.R5.d_error
+            # robot_state.R6.d_error = robot_state.R6.error - robot_state.R6.d_error
+            # robot_state.L1.d_error = robot_state.L1.error - robot_state.L1.d_error
+            # robot_state.L2.d_error = robot_state.L2.error - robot_state.L2.d_error
+            # robot_state.L3.d_error = robot_state.L3.error - robot_state.L3.d_error
+            # robot_state.L4.d_error = robot_state.L4.error - robot_state.L4.d_error
+            # robot_state.L5.d_error = robot_state.L5.error - robot_state.L5.d_error
+            # robot_state.L6.d_error = robot_state.L6.error - robot_state.L6.d_error
+
+            # robot_state.R7.d_error = robot_state.R7.error - robot_state.R7.d_error
+            # robot_state.R8.d_error = robot_state.R8.error - robot_state.R8.d_error
+            # robot_state.L7.d_error = robot_state.L7.error - robot_state.L7.d_error
+            # robot_state.L8.d_error = robot_state.L8.error - robot_state.L8.d_error
+
+            robot_state.R1.d_error = position[0] - previous_position[0]
+            robot_state.R2.d_error = position[1] - previous_position[1]
+            robot_state.R3.d_error = position[2] - previous_position[2]
+            robot_state.R4.d_error = position[3] - previous_position[3]
+            robot_state.R5.d_error = position[4] - previous_position[4]
+            robot_state.R6.d_error = position[5] - previous_position[5]
+            robot_state.L1.d_error = position[6] - previous_position[6]
+            robot_state.L2.d_error = position[7] - previous_position[7]
+            robot_state.L3.d_error = position[8] - previous_position[8]
+            robot_state.L4.d_error = position[9] - previous_position[9]
+            robot_state.L5.d_error = position[10] - previous_position[10]
+            robot_state.L6.d_error = position[11] - previous_position[11]
+
+            robot_state.R7.d_error = position[12] - previous_position[12]
+            robot_state.R8.d_error = position[13] - previous_position[13]
+            robot_state.L7.d_error = position[14] - previous_position[14]
+            robot_state.L8.d_error = position[15] - previous_position[15]
+        
+            ### i-error
+            robot_state.R1.i_error = max(-100, min(robot_state.R1.i_error + robot_state.R1.error, 100))
+            robot_state.R2.i_error = max(-100, min(robot_state.R2.i_error + robot_state.R2.error, 100))
+            robot_state.R3.i_error = max(-100, min(robot_state.R3.i_error + robot_state.R3.error, 100))
+            robot_state.R4.i_error = max(-100, min(robot_state.R4.i_error + robot_state.R4.error, 100))
+            robot_state.R5.i_error = max(-100, min(robot_state.R5.i_error + robot_state.R5.error, 100))
+            robot_state.R6.i_error = max(-100, min(robot_state.R6.i_error + robot_state.R6.error, 100))
+            robot_state.L1.i_error = max(-100, min(robot_state.L1.i_error + robot_state.L1.error, 100))
+            robot_state.L2.i_error = max(-100, min(robot_state.L2.i_error + robot_state.L2.error, 100))
+            robot_state.L3.i_error = max(-100, min(robot_state.L3.i_error + robot_state.L3.error, 100))
+            robot_state.L4.i_error = max(-100, min(robot_state.L4.i_error + robot_state.L4.error, 100))
+            robot_state.L5.i_error = max(-100, min(robot_state.L5.i_error + robot_state.L5.error, 100))
+            robot_state.L6.i_error = max(-100, min(robot_state.L6.i_error + robot_state.L6.error, 100))
+
+            robot_state.R7.i_error = max(-100, min(robot_state.R7.i_error + robot_state.R7.error, 100))
+            robot_state.R8.i_error = max(-100, min(robot_state.R8.i_error + robot_state.R8.error, 100))
+            robot_state.L7.i_error = max(-100, min(robot_state.L7.i_error + robot_state.L7.error, 100))
+            robot_state.L8.i_error = max(-100, min(robot_state.L8.i_error + robot_state.L8.error, 100))
 
             lock.release()
+
+            previous_position = position
 
         except Exception as e:
             rospy.logerr(f"Error occured during on get_encoder_data error meg : {e}")
@@ -196,15 +254,15 @@ if __name__ == '__main__':
     rospy.loginfo("armstrong robot state node start...")
 
     ### Master 조작 신호를 받는 쓰레드 생성
-    th_sub_cmd_input = threading.Thread(target=sub_cmd_input)
+    th_sub_cmd_input = threading.Thread(target=sub_cmd_input, args=(robot_state,))
     th_sub_cmd_input.start()
 
     ### Robot State 발행하는 쓰레드 생성
-    th_pub_robot_state = threading.Thread(target=pub_robot_state)
+    th_pub_robot_state = threading.Thread(target=pub_robot_state, args=(robot_state,))
     th_pub_robot_state.start()
 
     ### 엔코더 정보 쓰는 쓰레드 생성
-    th_get_encoder_data = threading.Thread(target=get_encoder_data)
+    th_get_encoder_data = threading.Thread(target=get_encoder_data, args=(robot_state,))
     th_get_encoder_data.start()
 
     rospy.spin()
