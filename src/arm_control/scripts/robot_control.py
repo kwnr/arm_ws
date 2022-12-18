@@ -15,74 +15,68 @@ from arm_msgs.msg import arm_dynamixel_state
 state_lock = threading.Lock()
 robot_state = arm_robot_state()
 
-d_lock = threading.Lock()
-d1 = arm_dynamixel_state()
-d2 = arm_dynamixel_state()
-d3 = arm_dynamixel_state()
-d4 = arm_dynamixel_state()
-
-lj_lock = threading.Lock()
-left_j1 = arm_joint_state()
-left_j2 = arm_joint_state()
-left_j3 = arm_joint_state()
-left_j4 = arm_joint_state()
-left_j5 = arm_joint_state()
-left_j6 = arm_joint_state()
-left_j7 = arm_joint_state()
-left_j8 = arm_joint_state()
-
-rj_lock = threading.Lock()
-right_j1 = arm_joint_state()
-right_j2 = arm_joint_state()
-right_j3 = arm_joint_state()
-right_j4 = arm_joint_state()
-right_j5 = arm_joint_state()
-right_j6 = arm_joint_state()
-right_j7 = arm_joint_state()
-right_j8 = arm_joint_state()
-
-def msg_sub_seperate_msgs():
-
+def msg_sub_seperate_msgs(robot_state: arm_robot_state):
     def processing(data :arm_robot_state) -> None:
-        global robot_state, d1, d2, d3, d4
         state_lock.acquire()
-        robot_state = data
+        robot_state.input_command = data.input_command
+        robot_state.L1 = data.L1
+        robot_state.L2 = data.L2
+        robot_state.L3 = data.L3
+        robot_state.L4 = data.L4
+        robot_state.L5 = data.L5
+        robot_state.L6 = data.L6
+        robot_state.L7 = data.L7
+        robot_state.L8 = data.L8
+
+        robot_state.R1 = data.R1
+        robot_state.R2 = data.R2
+        robot_state.R3 = data.R3
+        robot_state.R4 = data.R4
+        robot_state.R5 = data.R5
+        robot_state.R6 = data.R6
+        robot_state.R7 = data.R7
+        robot_state.R8 = data.R8
+
+        robot_state.DXL1 = data.DXL1
+        robot_state.DXL2 = data.DXL2
+        robot_state.DXL3 = data.DXL3
+        robot_state.DXL4 = data.DXL4
         state_lock.release()
 
-        # d_lock.acquire()
-        # d1, d2, d3, d4 = robot_state.DXL1, robot_state.DXL2, robot_state.DXL3, robot_state.DXL4
-        # d_lock.release()
+    rospy.Subscriber("robot_state", arm_robot_state, callback=processing)
 
+def checking_state_msg(robot_state: arm_robot_state):
+    import time
+    rospy.loginfo("Checking state msg...")
+    log_once = True
+    checking_duration = rospy.Duration(secs=2)
 
-        # lj_lock.acquire()
-        # left_j1, left_j2, left_j3, left_j4 = robot_state.L1, robot_state.L2, robot_state.L3, robot_state.L4
-        # left_j5, left_j6, left_j7, left_j8 = robot_state.L5, robot_state.L6, robot_state.L7, robot_state.L8
-        # lj_lock.release()
+    msg_check_rate = rospy.Rate(5)
+    
+    while not rospy.is_shutdown():
+        t_start = rospy.Time.now()
+        t_check = t_start
 
+        t_input = t_start
 
-        # rj_lock.acquire()
-        # right_j1, right_j2, right_j3, right_j4 = robot_state.R1, robot_state.R2, robot_state.R3, robot_state.R4
-        # right_j5, right_j6, right_j7, right_j8 = robot_state.R5, robot_state.R6, robot_state.R7, robot_state.R8
-        # rj_lock.release()
+        while not ((t_check - t_start).to_sec()) > checking_duration.to_sec():
+            t_check = rospy.Time.now()
 
-    rospy.Subscriber("robot_state", arm_robot_state, processing)
+            state_lock.acquire()
+            t_input = robot_state.input_command.header.stamp
+            state_lock.release()
 
-def checking_state_msg():
-    checking_duration = rospy.Duration(secs=4)
-    check_result = False
+            time.sleep(0.25)
 
-    t_start = rospy.Time.now()
-    t_check = t_start
+        if (t_input - t_start).to_sec() > 1.5:
+            if log_once:
+                rospy.loginfo("State msg chekcing done! This control node check state msg at 0.5Hz...")
+                log_once = False
+        else:
+            rospy.logerr("State msg is wrong shutdown control node...")
+            rospy.on_shutdown(cylinder_volate_output(robot_state))
 
-
-    while ((t_check - t_start).to_sec() > checking_duration.to_sec()):
-        t_check = rospy.Time.now()
-
-        state_lock.acquire()
-        left_input_check = True
-
-
-        state_lock.release()
+        msg_check_rate.sleep()
 
 def dynamixel_controller():
     import dynamixel_sdk
@@ -204,7 +198,7 @@ def dynamixel_controller():
             rospy.logerr(ke+f" | Closing {_PortName}...")
             _ph.closePort()
 
-def cylinder_volate_output():
+def cylinder_volate_output(robot_state: arm_robot_state):
     ############## Phidget #####################   PD 제어기 게인값 튜닝
     dt = 15        ## △t 15mmsec
     error_pre = [0.0]*16     ## master - slave
@@ -233,8 +227,8 @@ def cylinder_volate_output():
             voltageOutput[i+12].setChannel(i)
             voltageOutput[i+12].openWaitForAttachment(1000)
     except:
-        rospy.logerr("Fail to initiate Phidget board... close control node...")
-        rospy.signal_shutdown("Fail to initiating Phidget board.")
+        rospy.logerr("Fail to initiate Phidget board... closing control node...")
+        # rospy.on_shutdown(cylinder_volate_output)
 
     def pdLoop():
 
@@ -356,8 +350,12 @@ def cylinder_volate_output():
 
         control_rate.sleep()
 
+    rospy.logwarn(f"Recieved shutdown signal set voltage to 0 V...")
+    for i in range(16):
+        voltageOutput[i].setVoltage(0.0)
+    rospy.logwarn(f"Setting voltage done. safely locked!")
 
-def pub_control_state():
+def pub_control_state(robot_state: arm_robot_state):
     rospy.loginfo("Control state publishing thread is running...")
     pub_rate = rospy.Rate(100)
     robot_state_pub = rospy.Publisher("control_state", arm_robot_state, queue_size=10)
@@ -374,26 +372,27 @@ def pub_control_state():
 
 if __name__ == '__main__':
     rospy.init_node('arm_control')
-    rospy.loginfo("armstrong robot controller node start...") 
+    rospy.loginfo("Armstrong robot controller node start...") 
 
     ### robot_state 구독 및 개별 제어 값 메시지 생성
-    th_msg_sub_seperate_msgs = threading.Thread(target=msg_sub_seperate_msgs)
+    th_msg_sub_seperate_msgs = threading.Thread(target=msg_sub_seperate_msgs, args=(robot_state,))
     th_msg_sub_seperate_msgs.start()
 
 
     ### robot_state 검증 함수 실행
-
+    th_checking_state_msg = threading.Thread(target=checking_state_msg, args=(robot_state,))
+    th_checking_state_msg.start()
 
     ### 다이나믹셀 제어 노드 생성
 
 
     ### 유압 실린더 전압 제어 노드 생성
-    th_cylinder_volate_output = threading.Thread(target=cylinder_volate_output)
+    th_cylinder_volate_output = threading.Thread(target=cylinder_volate_output, args=(robot_state,))
     th_cylinder_volate_output.start()
 
 
     ### Publishing Voltage
-    th_pub_control_state = threading.Thread(target=pub_control_state)
+    th_pub_control_state = threading.Thread(target=pub_control_state, args=(robot_state,))
     th_pub_control_state.start()
 
     rospy.spin()

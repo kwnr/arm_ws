@@ -36,8 +36,7 @@ def ros_param_chek(robot_state: arm_robot_state):
             gain_d_right[i] = rospy.get_param(prefix_str +'R'+ str(i+1) + '/' + 'd')
 
         except:
-            rospy.logwarn("Joint controller gain is not defined! load default gains... (check yaml file)")
-            print(prefix_str +'R'+ str(i+1) + 'd')
+            rospy.logwarn(f"Joint controller gain is not defined! load default gains... ({i}) (check yaml file)")
             gain_p_left = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]
             gain_p_right = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]
 
