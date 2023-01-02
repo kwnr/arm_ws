@@ -20,28 +20,174 @@ def msg_sub_seperate_msgs(robot_state: arm_robot_state):
     def processing(data :arm_robot_state) -> None:
         state_lock.acquire()
         robot_state.input_command = data.input_command
-        robot_state.L1 = data.L1
-        robot_state.L2 = data.L2
-        robot_state.L3 = data.L3
-        robot_state.L4 = data.L4
-        robot_state.L5 = data.L5
-        robot_state.L6 = data.L6
-        robot_state.L7 = data.L7
-        robot_state.L8 = data.L8
+        # robot_state.L1 = data.L1
+        # robot_state.L1 = data.L1
+        # robot_state.L2 = data.L2
+        # robot_state.L3 = data.L3
+        # robot_state.L4 = data.L4
+        # robot_state.L5 = data.L5
+        # robot_state.L6 = data.L6
+        # robot_state.L7 = data.L7
+        # robot_state.L8 = data.L8
 
-        robot_state.R1 = data.R1
-        robot_state.R2 = data.R2
-        robot_state.R3 = data.R3
-        robot_state.R4 = data.R4
-        robot_state.R5 = data.R5
-        robot_state.R6 = data.R6
-        robot_state.R7 = data.R7
-        robot_state.R8 = data.R8
+        # robot_state.R1 = data.R1
+        # robot_state.R2 = data.R2
+        # robot_state.R3 = data.R3
+        # robot_state.R4 = data.R4
+        # robot_state.R5 = data.R5
+        # robot_state.R6 = data.R6
+        # robot_state.R7 = data.R7
+        # robot_state.R8 = data.R8
+
+        robot_state.L1.p_gain           = data.L1.p_gain
+        robot_state.L1.i_gain           = data.L1.i_gain
+        robot_state.L1.d_gain           = data.L1.d_gain
+        robot_state.L1.goal_pos         = data.L1.goal_pos
+        robot_state.L1.present_pos      = data.L1.present_pos
+        robot_state.L1.error            = data.L1.error
+        robot_state.L1.d_error          = data.L1.d_error
+        robot_state.L1.i_error          = data.L1.i_error
+        
+        robot_state.L2.p_gain           = data.L2.p_gain
+        robot_state.L2.i_gain           = data.L2.i_gain
+        robot_state.L2.d_gain           = data.L2.d_gain
+        robot_state.L2.goal_pos         = data.L2.goal_pos
+        robot_state.L2.present_pos      = data.L2.present_pos
+        robot_state.L2.error            = data.L2.error
+        robot_state.L2.d_error          = data.L2.d_error
+        robot_state.L2.i_error          = data.L2.i_error
+
+        robot_state.L3.p_gain           = data.L3.p_gain
+        robot_state.L3.i_gain           = data.L3.i_gain
+        robot_state.L3.d_gain           = data.L3.d_gain
+        robot_state.L3.goal_pos         = data.L3.goal_pos
+        robot_state.L3.present_pos      = data.L3.present_pos
+        robot_state.L3.error            = data.L3.error
+        robot_state.L3.d_error          = data.L3.d_error
+        robot_state.L3.i_error          = data.L3.i_error
+
+        robot_state.L4.p_gain           = data.L4.p_gain
+        robot_state.L4.i_gain           = data.L4.i_gain
+        robot_state.L4.d_gain           = data.L4.d_gain
+        robot_state.L4.goal_pos         = data.L4.goal_pos
+        robot_state.L4.present_pos      = data.L4.present_pos
+        robot_state.L4.error            = data.L4.error
+        robot_state.L4.d_error          = data.L4.d_error
+        robot_state.L4.i_error          = data.L4.i_error
+
+        robot_state.L5.p_gain           = data.L5.p_gain
+        robot_state.L5.i_gain           = data.L5.i_gain
+        robot_state.L5.d_gain           = data.L5.d_gain
+        robot_state.L5.goal_pos         = data.L5.goal_pos
+        robot_state.L5.present_pos      = data.L5.present_pos
+        robot_state.L5.error            = data.L5.error
+        robot_state.L5.d_error          = data.L5.d_error
+        robot_state.L5.i_error          = data.L5.i_error
+
+        robot_state.L6.p_gain           = data.L6.p_gain
+        robot_state.L6.i_gain           = data.L6.i_gain
+        robot_state.L6.d_gain           = data.L6.d_gain
+        robot_state.L6.goal_pos         = data.L6.goal_pos
+        robot_state.L6.present_pos      = data.L6.present_pos
+        robot_state.L6.error            = data.L6.error
+        robot_state.L6.d_error          = data.L6.d_error
+        robot_state.L6.i_error          = data.L6.i_error
+
+        robot_state.L7.p_gain           = data.L7.p_gain
+        robot_state.L7.i_gain           = data.L7.i_gain
+        robot_state.L7.d_gain           = data.L7.d_gain
+        robot_state.L7.goal_pos         = data.L7.goal_pos
+        robot_state.L7.present_pos      = data.L7.present_pos
+        robot_state.L7.error            = data.L7.error
+        robot_state.L7.d_error          = data.L7.d_error
+        robot_state.L7.i_error          = data.L7.i_error
+
+        robot_state.L8.p_gain           = data.L8.p_gain
+        robot_state.L8.i_gain           = data.L8.i_gain
+        robot_state.L8.d_gain           = data.L8.d_gain
+        robot_state.L8.goal_pos         = data.L8.goal_pos
+        robot_state.L8.present_pos      = data.L8.present_pos
+        robot_state.L8.error            = data.L8.error
+        robot_state.L8.d_error          = data.L8.d_error
+        robot_state.L8.i_error          = data.L8.i_error
+        
+        robot_state.R1.p_gain           = data.R1.p_gain
+        robot_state.R1.i_gain           = data.R1.i_gain
+        robot_state.R1.d_gain           = data.R1.d_gain
+        robot_state.R1.goal_pos         = data.R1.goal_pos
+        robot_state.R1.present_pos      = data.R1.present_pos
+        robot_state.R1.error            = data.R1.error
+        robot_state.R1.d_error          = data.R1.d_error
+        robot_state.R1.i_error          = data.R1.i_error
+        
+        robot_state.R2.p_gain           = data.R2.p_gain
+        robot_state.R2.i_gain           = data.R2.i_gain
+        robot_state.R2.d_gain           = data.R2.d_gain
+        robot_state.R2.goal_pos         = data.R2.goal_pos
+        robot_state.R2.present_pos      = data.R2.present_pos
+        robot_state.R2.error            = data.R2.error
+        robot_state.R2.d_error          = data.R2.d_error
+        robot_state.R2.i_error          = data.R2.i_error
+
+        robot_state.R3.p_gain           = data.R3.p_gain
+        robot_state.R3.i_gain           = data.R3.i_gain
+        robot_state.R3.d_gain           = data.R3.d_gain
+        robot_state.R3.goal_pos         = data.R3.goal_pos
+        robot_state.R3.present_pos      = data.R3.present_pos
+        robot_state.R3.error            = data.R3.error
+        robot_state.R3.d_error          = data.R3.d_error
+        robot_state.R3.i_error          = data.R3.i_error
+
+        robot_state.R4.p_gain           = data.R4.p_gain
+        robot_state.R4.i_gain           = data.R4.i_gain
+        robot_state.R4.d_gain           = data.R4.d_gain
+        robot_state.R4.goal_pos         = data.R4.goal_pos
+        robot_state.R4.present_pos      = data.R4.present_pos
+        robot_state.R4.error            = data.R4.error
+        robot_state.R4.d_error          = data.R4.d_error
+        robot_state.R4.i_error          = data.R4.i_error
+
+        robot_state.R5.p_gain           = data.R5.p_gain
+        robot_state.R5.i_gain           = data.R5.i_gain
+        robot_state.R5.d_gain           = data.R5.d_gain
+        robot_state.R5.goal_pos         = data.R5.goal_pos
+        robot_state.R5.present_pos      = data.R5.present_pos
+        robot_state.R5.error            = data.R5.error
+        robot_state.R5.d_error          = data.R5.d_error
+        robot_state.R5.i_error          = data.R5.i_error
+
+        robot_state.R6.p_gain           = data.R6.p_gain
+        robot_state.R6.i_gain           = data.R6.i_gain
+        robot_state.R6.d_gain           = data.R6.d_gain
+        robot_state.R6.goal_pos         = data.R6.goal_pos
+        robot_state.R6.present_pos      = data.R6.present_pos
+        robot_state.R6.error            = data.R6.error
+        robot_state.R6.d_error          = data.R6.d_error
+        robot_state.R6.i_error          = data.R6.i_error
+
+        robot_state.R7.p_gain           = data.R7.p_gain
+        robot_state.R7.i_gain           = data.R7.i_gain
+        robot_state.R7.d_gain           = data.R7.d_gain
+        robot_state.R7.goal_pos         = data.R7.goal_pos
+        robot_state.R7.present_pos      = data.R7.present_pos
+        robot_state.R7.error            = data.R7.error
+        robot_state.R7.d_error          = data.R7.d_error
+        robot_state.R7.i_error          = data.R7.i_error
+
+        robot_state.R8.p_gain           = data.R8.p_gain
+        robot_state.R8.i_gain           = data.R8.i_gain
+        robot_state.R8.d_gain           = data.R8.d_gain
+        robot_state.R8.goal_pos         = data.R8.goal_pos
+        robot_state.R8.present_pos      = data.R8.present_pos
+        robot_state.R8.error            = data.R8.error
+        robot_state.R8.d_error          = data.R8.d_error
+        robot_state.R8.i_error          = data.R8.i_error
 
         robot_state.DXL1 = data.DXL1
         robot_state.DXL2 = data.DXL2
         robot_state.DXL3 = data.DXL3
         robot_state.DXL4 = data.DXL4
+        
         state_lock.release()
 
     rospy.Subscriber("robot_state", arm_robot_state, callback=processing)
