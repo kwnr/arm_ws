@@ -2,6 +2,7 @@
 
 import rospy
 import threading
+import numpy as np
 
 from Phidget22.Phidget import *
 from Phidget22.Devices.VoltageOutput import *
@@ -70,7 +71,7 @@ def checking_state_msg(robot_state: arm_robot_state):
 
         if (t_input - t_start).to_sec() > 1.5:
             if log_once:
-                rospy.loginfo("State msg chekcing done! This control node check state msg at 0.5Hz...")
+                rospy.loginfo("State msg chekcing done! This control node check state msg at 5Hz...")
                 log_once = False
         else:
             rospy.logerr("State msg is wrong shutdown control node...")
@@ -202,13 +203,14 @@ def cylinder_volate_output(robot_state: arm_robot_state):
     ############## Phidget #####################   PD 제어기 게인값 튜닝
     dt = 15        ## △t 15mmsec
     error_pre = [0.0]*16     ## master - slave
-    error_cur = [0.0]*16
+    error_cur = np.array([0.0]*16)
     D_error = [0.0]*16       ## △error
-    volt = [0.0]*16
+    # volt = [0.0]*16
+    volt = np.zeros(16)
     # KP = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]*2     # P Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
-    KP = [1.2, 1.6, 1.6, 1.4, 1.3, 1.15, 1, 1]*2     # P Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
-    KD = [0.2, 0.3, 0.3, 0.45, 0.1, 0.1, 0, 0]*2    # D Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
-    I = [0] * 16
+    KP = np.array([1.2, 1.6, 1.6, 1.4, 1.3, 1.15, 1, 1]*2)     # P Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
+    KD = np.array([0.2, 0.3, 0.3, 0.45, 0.1, 0.1, 0, 0]*2)    # D Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
+    I  = np.array([0.0] * 16)
 
     voltageOutput = [VoltageOutput() for _ in range(16)]
 
@@ -276,33 +278,37 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             elif volt[i] < -10:
                 volt[i] = -10
 
-            if robot_state.input_command.R7 == 1:      ## R7,R8, L7,L8 제어
-                volt[6] = -10
-            elif robot_state.input_command.R7 == 0:
-                volt[6] = 0
-            else:
-                volt[6] = 10
+        state_lock.acquire()
 
-            if robot_state.input_command.R8 == 1:      ## R7,R8, L7,L8 제어
-                volt[7] = -10
-            elif robot_state.input_command.R8 == 0:
-                volt[7] = 0
-            else:
-                volt[7] = 10
+        if robot_state.input_command.R7 == 1:      ## R7,R8, L7,L8 제어
+            volt[6] = -10
+        elif robot_state.input_command.R7 == 0:
+            volt[6] = 0
+        else:
+            volt[6] = 10
 
-            if robot_state.input_command.L7 == 1:      ## R7,R8, L7,L8 제어
-                volt[14] = -10
-            elif robot_state.input_command.L7 == 0:
-                volt[14] = 0
-            else:
-                volt[14] = 10
+        if robot_state.input_command.R8 == 1:      ## R7,R8, L7,L8 제어
+            volt[7] = -10
+        elif robot_state.input_command.R8 == 0:
+            volt[7] = 0
+        else:
+            volt[7] = 10
 
-            if robot_state.input_command.L8 == 1:      ## R7,R8, L7,L8 제어
-                volt[15] = -10
-            elif robot_state.input_command.L8 == 0:
-                volt[15] = 0
-            else:
-                volt[15] = 10
+        if robot_state.input_command.L7 == 1:      ## R7,R8, L7,L8 제어
+            volt[14] = -10
+        elif robot_state.input_command.L7 == 0:
+            volt[14] = 0
+        else:
+            volt[14] = 10
+
+        if robot_state.input_command.L8 == 1:      ## R7,R8, L7,L8 제어
+            volt[15] = -10
+        elif robot_state.input_command.L8 == 0:
+            volt[15] = 0
+        else:
+            volt[15] = 10
+
+        state_lock.release()
 
         if abs(volt[6]) == 10 and abs(volt[7]) == 10:     ## R7, R8 이 동시에 -1(1) 값을 갖는 것을 방지함
             volt[6] = 0
