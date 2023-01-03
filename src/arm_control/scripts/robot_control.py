@@ -348,11 +348,14 @@ def dynamixel_controller():
 def cylinder_volate_output(robot_state: arm_robot_state):
     ############## Phidget #####################   PD 제어기 게인값 튜닝
     dt = 15        ## △t 15mmsec
-    error_pre = [0.0]*16     ## master - slave
+
+    error_pre = np.array([0.0]*16)     ## master - slave
     error_cur = np.array([0.0]*16)
-    D_error = [0.0]*16       ## △error
-    # volt = [0.0]*16
+    D_error = np.array([0.0]*16)  
+    I_error = np.array([0.0]*16)  
+
     volt = np.zeros(16)
+
     # KP = [0.1, 0.2, 0.2, 0.4, 0.3, 0.15, 0, 0]*2     # P Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
     KP = np.array([1.2, 1.6, 1.6, 1.4, 1.3, 1.15, 1, 1]*2)     # P Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
     KD = np.array([0.2, 0.3, 0.3, 0.45, 0.1, 0.1, 0, 0]*2)    # D Gain 7,8번은 스위치로 변경되었으므로 게인값 없음
@@ -380,28 +383,28 @@ def cylinder_volate_output(robot_state: arm_robot_state):
 
     def pdLoop():
 
-        state_lock.acquire()
-        error_cur[0] = robot_state.R1.error
-        error_cur[1] = robot_state.R2.error
-        error_cur[2] = robot_state.R3.error
-        error_cur[3] = robot_state.R4.error
-        error_cur[4] = robot_state.R5.error
-        error_cur[5] = robot_state.R6.error
-        error_cur[6] = int(robot_state.input_command.R7)
-        error_cur[7] = int(robot_state.input_command.R8)
-        
-        error_cur[8]  = robot_state.L1.error
-        error_cur[9]  = robot_state.L2.error
-        error_cur[10] = robot_state.L3.error
-        error_cur[11] = robot_state.L4.error
-        error_cur[12] = robot_state.L5.error
-        error_cur[13] = robot_state.L6.error
-        error_cur[14] = int(robot_state.input_command.L7)
-        error_cur[15] = int(robot_state.input_command.L8)
-        state_lock.release()
+        with state_lock:
+            error_cur[0] = robot_state.R1.error
+            error_cur[1] = robot_state.R2.error
+            error_cur[2] = robot_state.R3.error
+            error_cur[3] = robot_state.R4.error
+            error_cur[4] = robot_state.R5.error
+            error_cur[5] = robot_state.R6.error
+            error_cur[6] = int(robot_state.input_command.R7)
+            error_cur[7] = int(robot_state.input_command.R8)
+            
+            error_cur[8]  = robot_state.L1.error
+            error_cur[9]  = robot_state.L2.error
+            error_cur[10] = robot_state.L3.error
+            error_cur[11] = robot_state.L4.error
+            error_cur[12] = robot_state.L5.error
+            error_cur[13] = robot_state.L6.error
+            error_cur[14] = int(robot_state.input_command.L7)
+            error_cur[15] = int(robot_state.input_command.L8)
 
         for i in range(16):
-            #D_error[i] = error_cur[i] - error_pre[i]
+            D_error[i] = error_cur[i] - error_pre[i]
+
             volt[i] = float(KP[i] * error_cur[i]) * -1
 
             if i==4: volt[i] = -volt[i]
@@ -424,37 +427,34 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             elif volt[i] < -10:
                 volt[i] = -10
 
-        state_lock.acquire()
+        with state_lock:
+            if robot_state.input_command.R7 == 1:      ## R7,R8, L7,L8 제어
+                volt[6] = -10
+            elif robot_state.input_command.R7 == 0:
+                volt[6] = 0
+            else:
+                volt[6] = 10
 
-        if robot_state.input_command.R7 == 1:      ## R7,R8, L7,L8 제어
-            volt[6] = -10
-        elif robot_state.input_command.R7 == 0:
-            volt[6] = 0
-        else:
-            volt[6] = 10
+            if robot_state.input_command.R8 == 1:      ## R7,R8, L7,L8 제어
+                volt[7] = -10
+            elif robot_state.input_command.R8 == 0:
+                volt[7] = 0
+            else:
+                volt[7] = 10
 
-        if robot_state.input_command.R8 == 1:      ## R7,R8, L7,L8 제어
-            volt[7] = -10
-        elif robot_state.input_command.R8 == 0:
-            volt[7] = 0
-        else:
-            volt[7] = 10
+            if robot_state.input_command.L7 == 1:      ## R7,R8, L7,L8 제어
+                volt[14] = -10
+            elif robot_state.input_command.L7 == 0:
+                volt[14] = 0
+            else:
+                volt[14] = 10
 
-        if robot_state.input_command.L7 == 1:      ## R7,R8, L7,L8 제어
-            volt[14] = -10
-        elif robot_state.input_command.L7 == 0:
-            volt[14] = 0
-        else:
-            volt[14] = 10
-
-        if robot_state.input_command.L8 == 1:      ## R7,R8, L7,L8 제어
-            volt[15] = -10
-        elif robot_state.input_command.L8 == 0:
-            volt[15] = 0
-        else:
-            volt[15] = 10
-
-        state_lock.release()
+            if robot_state.input_command.L8 == 1:      ## R7,R8, L7,L8 제어
+                volt[15] = -10
+            elif robot_state.input_command.L8 == 0:
+                volt[15] = 0
+            else:
+                volt[15] = 10
 
         if abs(volt[6]) == 10 and abs(volt[7]) == 10:     ## R7, R8 이 동시에 -1(1) 값을 갖는 것을 방지함
             volt[6] = 0
@@ -463,33 +463,51 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             volt[14] = 0
             volt[15] = 0
 
+        with state_lock:
+            robot_state.R1.calculated_voltage = volt[0]
+            robot_state.R2.calculated_voltage = volt[1]
+            robot_state.R3.calculated_voltage = volt[2]
+            robot_state.R4.calculated_voltage = volt[3]
+            robot_state.R5.calculated_voltage = volt[4]
+            robot_state.R6.calculated_voltage = volt[5]
+            robot_state.R7.calculated_voltage = volt[6]
+            robot_state.R8.calculated_voltage = volt[7]
 
-        state_lock.acquire()
-        robot_state.R1.calculated_voltage = volt[0]
-        robot_state.R2.calculated_voltage = volt[1]
-        robot_state.R3.calculated_voltage = volt[2]
-        robot_state.R4.calculated_voltage = volt[3]
-        robot_state.R5.calculated_voltage = volt[4]
-        robot_state.R6.calculated_voltage = volt[5]
-        robot_state.R7.calculated_voltage = volt[6]
-        robot_state.R8.calculated_voltage = volt[7]
+            robot_state.L1.calculated_voltage = volt[8]
+            robot_state.L2.calculated_voltage = volt[9]
+            robot_state.L3.calculated_voltage = volt[10]
+            robot_state.L4.calculated_voltage = volt[11]
+            robot_state.L5.calculated_voltage = volt[12]
+            robot_state.L6.calculated_voltage = volt[13]
+            robot_state.L7.calculated_voltage = volt[14]
+            robot_state.L8.calculated_voltage = volt[15]
 
-        robot_state.L1.calculated_voltage = volt[8]
-        robot_state.L2.calculated_voltage = volt[9]
-        robot_state.L3.calculated_voltage = volt[10]
-        robot_state.L4.calculated_voltage = volt[11]
-        robot_state.L5.calculated_voltage = volt[12]
-        robot_state.L6.calculated_voltage = volt[13]
-        robot_state.L7.calculated_voltage = volt[14]
-        robot_state.L8.calculated_voltage = volt[15]
+            robot_state.R1.d_error = D_error[0]
+            robot_state.R2.d_error = D_error[1]
+            robot_state.R3.d_error = D_error[2]
+            robot_state.R4.d_error = D_error[3]
+            robot_state.R5.d_error = D_error[4]
+            robot_state.R6.d_error = D_error[5]
+            robot_state.R7.d_error = D_error[6]
+            robot_state.R8.d_error = D_error[7]
 
-        state_lock.release()
+            robot_state.L1.d_error = D_error[8]
+            robot_state.L2.d_error = D_error[9]
+            robot_state.L3.d_error = D_error[10]
+            robot_state.L4.d_error = D_error[11]
+            robot_state.L5.d_error = D_error[12]
+            robot_state.L6.d_error = D_error[13]
+            robot_state.L7.d_error = D_error[14]
+            robot_state.L8.d_error = D_error[15]
 
-        for i in range(8):
+        for i in range(16):
             voltageOutput[i].setVoltage(volt[i])
 
-        # voltageOutput[3].setVoltage(-3)
+        for i in range(16):
+            error_pre[i] = error_cur[i]
+            I_error[i] = I_error[i] + error_cur[i]
 
+        I_error = np.clip(I_error, -100, 100)
 
     control_rate = rospy.Rate(100)
     while not rospy.is_shutdown():
