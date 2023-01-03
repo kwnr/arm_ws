@@ -315,11 +315,10 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L7.i_error = max(-20, min(robot_state.L7.i_error + robot_state.L7.error, 20))
             robot_state.L8.i_error = max(-20, min(robot_state.L8.i_error + robot_state.L8.error, 20))
 
-        previous_error = present_error
+        for i in range(16):
+            previous_error[i] = present_error[i]
 
         read_encoder_rate.sleep()
-
-
 
 if __name__ == '__main__':
     rospy.init_node('arm_state_monitoring')
