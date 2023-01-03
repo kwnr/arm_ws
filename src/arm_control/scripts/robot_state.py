@@ -229,8 +229,15 @@ def get_encoder_data(robot_state: arm_robot_state):
                     continue
                 position[(i[0]-12)//16] = getEnc(input_val, (i[0]-12)//16) # 수신 데이터를 (i[0]-12)//16번 리스트에 저장
 
-            lock.acquire()
+        except Exception as e:
+            rospy.logerr(f"Error occured during on get_encoder_data! **RESTART ROBOT STATE NODE** : {e}")
+            break
+        
+        except KeyboardInterrupt as ke:
+            rospy.logerr(ke+f" | Closing {_serial_port_name}...")
+            serial_slave_encoder.close()
 
+        with lock:
             ### 현재 각도 저장하기 L & R
             robot_state.R1.present_pos = position[0]
             robot_state.R2.present_pos = position[1]
@@ -270,23 +277,23 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L8.error = position[15] - robot_state.L8.goal_pos
             
             ### D-error 계산하기
-            robot_state.R1.d_error = position[0] - previous_position[0]
-            robot_state.R2.d_error = position[1] - previous_position[1]
-            robot_state.R3.d_error = position[2] - previous_position[2]
-            robot_state.R4.d_error = position[3] - previous_position[3]
-            robot_state.R5.d_error = position[4] - previous_position[4]
-            robot_state.R6.d_error = position[5] - previous_position[5]
-            robot_state.L1.d_error = position[6] - previous_position[6]
-            robot_state.L2.d_error = position[7] - previous_position[7]
-            robot_state.L3.d_error = position[8] - previous_position[8]
-            robot_state.L4.d_error = position[9] - previous_position[9]
-            robot_state.L5.d_error = position[10] - previous_position[10]
-            robot_state.L6.d_error = position[11] - previous_position[11]
+            robot_state.R1.d_error = float(position[0] - previous_position[0])
+            robot_state.R2.d_error = float(position[1] - previous_position[1])
+            robot_state.R3.d_error = float(position[2] - previous_position[2])
+            robot_state.R4.d_error = float(position[3] - previous_position[3])
+            robot_state.R5.d_error = float(position[4] - previous_position[4])
+            robot_state.R6.d_error = float(position[5] - previous_position[5])
+            robot_state.L1.d_error = float(position[6] - previous_position[6])
+            robot_state.L2.d_error = float(position[7] - previous_position[7])
+            robot_state.L3.d_error = float(position[8] - previous_position[8])
+            robot_state.L4.d_error = float(position[9] - previous_position[9])
+            robot_state.L5.d_error = float(position[10] - previous_position[10])
+            robot_state.L6.d_error = float(position[11] - previous_position[11])
 
-            robot_state.R7.d_error = position[12] - previous_position[12]
-            robot_state.R8.d_error = position[13] - previous_position[13]
-            robot_state.L7.d_error = position[14] - previous_position[14]
-            robot_state.L8.d_error = position[15] - previous_position[15]
+            robot_state.R7.d_error = float(position[12] - previous_position[12])
+            robot_state.R8.d_error = float(position[13] - previous_position[13])
+            robot_state.L7.d_error = float(position[14] - previous_position[14])
+            robot_state.L8.d_error = float(position[15] - previous_position[15])
         
             ### I-error 계산하기
             robot_state.R1.i_error = max(-100, min(robot_state.R1.i_error + robot_state.R1.error, 100))
@@ -307,17 +314,8 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L7.i_error = max(-100, min(robot_state.L7.i_error + robot_state.L7.error, 100))
             robot_state.L8.i_error = max(-100, min(robot_state.L8.i_error + robot_state.L8.error, 100))
 
-            lock.release()
-
-            previous_position = position
-
-        except Exception as e:
-            rospy.logerr(f"Error occured during on get_encoder_data! **RESTART ROBOT STATE NODE** : {e}")
-            break
-        
-        except KeyboardInterrupt as ke:
-            rospy.logerr(ke+f" | Closing {_serial_port_name}...")
-            serial_slave_encoder.close()
+        for i in range(16):
+            previous_position[i] = position[i]
 
         read_encoder_rate.sleep()
 
