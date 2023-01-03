@@ -189,7 +189,7 @@ def get_encoder_data(robot_state: arm_robot_state):
         if value > 180:
             value = value - 360
 
-        value = round(value, 1)
+        value = round(value, 3)
         return value
 
     # Slave의 수신 값 오류 검출

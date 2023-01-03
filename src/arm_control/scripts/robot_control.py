@@ -349,10 +349,9 @@ def cylinder_volate_output(robot_state: arm_robot_state):
     ############## Phidget #####################   PD 제어기 게인값 튜닝
     dt = 15        ## △t 15mmsec
 
-    error_pre = np.array([0.0]*16)     ## master - slave
     error_cur = np.array([0.0]*16)
-    D_error = np.array([0.0]*16)  
-    I_error = np.array([0.0]*16)  
+    i_error = np.array([0.0]*16)
+    d_error = np.array([0.0]*16)
 
     volt = np.zeros(16)
 
@@ -379,7 +378,7 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             voltageOutput[i+12].openWaitForAttachment(1000)
     except:
         rospy.logerr("Fail to initiate Phidget board... closing control node...")
-        # rospy.on_shutdown(cylinder_volate_output)
+        rospy.on_shutdown(cylinder_volate_output(robot_state))
 
     def pdLoop():
 
@@ -402,9 +401,43 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             error_cur[14] = int(robot_state.input_command.L7)
             error_cur[15] = int(robot_state.input_command.L8)
 
-        for i in range(16):
-            D_error[i] = error_cur[i] - error_pre[i]
+            i_error[0] = robot_state.R1.i_error
+            i_error[1] = robot_state.R2.i_error
+            i_error[2] = robot_state.R3.i_error
+            i_error[3] = robot_state.R4.i_error
+            i_error[4] = robot_state.R5.i_error
+            i_error[5] = robot_state.R6.i_error
+            i_error[6] = robot_state.R7.i_error
+            i_error[7] = robot_state.R8.i_error
 
+            i_error[8]  = robot_state.L1.i_error
+            i_error[9]  = robot_state.L2.i_error
+            i_error[10] = robot_state.L3.i_error
+            i_error[11] = robot_state.L4.i_error
+            i_error[12] = robot_state.L5.i_error
+            i_error[13] = robot_state.L6.i_error
+            i_error[14] = robot_state.L7.i_error
+            i_error[15] = robot_state.L8.i_error
+
+            d_error[0] = robot_state.R1.d_error
+            d_error[1] = robot_state.R2.d_error
+            d_error[2] = robot_state.R3.d_error
+            d_error[3] = robot_state.R4.d_error
+            d_error[4] = robot_state.R5.d_error
+            d_error[5] = robot_state.R6.d_error
+            d_error[6] = robot_state.R7.d_error
+            d_error[7] = robot_state.R8.d_error
+
+            d_error[8]  = robot_state.L1.d_error
+            d_error[9]  = robot_state.L2.d_error
+            d_error[10] = robot_state.L3.d_error
+            d_error[11] = robot_state.L4.d_error
+            d_error[12] = robot_state.L5.d_error
+            d_error[13] = robot_state.L6.d_error
+            d_error[14] = robot_state.L7.d_error
+            d_error[15] = robot_state.L8.d_error
+
+        for i in range(16):
             volt[i] = float(KP[i] * error_cur[i]) * -1
 
             if i==4: volt[i] = -volt[i]
@@ -482,32 +515,8 @@ def cylinder_volate_output(robot_state: arm_robot_state):
             robot_state.L7.calculated_voltage = volt[14]
             robot_state.L8.calculated_voltage = volt[15]
 
-            robot_state.R1.d_error = D_error[0]
-            robot_state.R2.d_error = D_error[1]
-            robot_state.R3.d_error = D_error[2]
-            robot_state.R4.d_error = D_error[3]
-            robot_state.R5.d_error = D_error[4]
-            robot_state.R6.d_error = D_error[5]
-            robot_state.R7.d_error = D_error[6]
-            robot_state.R8.d_error = D_error[7]
-
-            robot_state.L1.d_error = D_error[8]
-            robot_state.L2.d_error = D_error[9]
-            robot_state.L3.d_error = D_error[10]
-            robot_state.L4.d_error = D_error[11]
-            robot_state.L5.d_error = D_error[12]
-            robot_state.L6.d_error = D_error[13]
-            robot_state.L7.d_error = D_error[14]
-            robot_state.L8.d_error = D_error[15]
-
         for i in range(16):
             voltageOutput[i].setVoltage(volt[i])
-
-        for i in range(16):
-            error_pre[i] = error_cur[i]
-            I_error[i] = I_error[i] + error_cur[i]
-
-        I_error = np.clip(I_error, -100, 100)
 
     control_rate = rospy.Rate(100)
     while not rospy.is_shutdown():
