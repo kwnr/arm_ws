@@ -215,7 +215,8 @@ def get_encoder_data(robot_state: arm_robot_state):
             return False
 
     position = np.array([0.0]*16)
-    previous_position = np.array([0.0]*16)
+    present_error = np.array([0.0]*16)
+    previous_error = np.array([0.0]*16)
 
     read_encoder_rate = rospy.Rate(100)
 
@@ -258,64 +259,63 @@ def get_encoder_data(robot_state: arm_robot_state):
             robot_state.L8.present_pos = position[15]
 
             ### 위치 에러 계산하기
-            robot_state.R1.error = position[0] - robot_state.R1.goal_pos
-            robot_state.R2.error = position[1] - robot_state.R2.goal_pos
-            robot_state.R3.error = position[2] - robot_state.R3.goal_pos
-            robot_state.R4.error = position[3] - robot_state.R4.goal_pos
-            robot_state.R5.error = position[4] - robot_state.R5.goal_pos
-            robot_state.R6.error = position[5] - robot_state.R6.goal_pos
-            robot_state.L1.error = position[6] - robot_state.L1.goal_pos
-            robot_state.L2.error = position[7] - robot_state.L2.goal_pos
-            robot_state.L3.error = position[8] - robot_state.L3.goal_pos
-            robot_state.L4.error = position[9] - robot_state.L4.goal_pos
-            robot_state.L5.error = position[10] - robot_state.L5.goal_pos
-            robot_state.L6.error = position[11] - robot_state.L6.goal_pos
+            robot_state.R1.error = present_error[0] = position[0] - robot_state.R1.goal_pos
+            robot_state.R2.error = present_error[1] = position[1] - robot_state.R2.goal_pos
+            robot_state.R3.error = present_error[2] = position[2] - robot_state.R3.goal_pos
+            robot_state.R4.error = present_error[3] = position[3] - robot_state.R4.goal_pos
+            robot_state.R5.error = present_error[4] = position[4] - robot_state.R5.goal_pos
+            robot_state.R6.error = present_error[5] = position[5] - robot_state.R6.goal_pos
+            robot_state.L1.error = present_error[6] = position[6] - robot_state.L1.goal_pos
+            robot_state.L2.error = present_error[7] = position[7] - robot_state.L2.goal_pos
+            robot_state.L3.error = present_error[8] = position[8] - robot_state.L3.goal_pos
+            robot_state.L4.error = present_error[9] = position[9] - robot_state.L4.goal_pos
+            robot_state.L5.error = present_error[10] = position[10] - robot_state.L5.goal_pos
+            robot_state.L6.error = present_error[11] = position[11] - robot_state.L6.goal_pos
 
-            robot_state.R7.error = position[12] - robot_state.R7.goal_pos
-            robot_state.R8.error = position[13] - robot_state.R8.goal_pos
-            robot_state.L7.error = position[14] - robot_state.L7.goal_pos
-            robot_state.L8.error = position[15] - robot_state.L8.goal_pos
+            robot_state.R7.error = present_error[12] = position[12] - robot_state.R7.goal_pos
+            robot_state.R8.error = present_error[13] = position[13] - robot_state.R8.goal_pos
+            robot_state.L7.error = present_error[14] = position[14] - robot_state.L7.goal_pos
+            robot_state.L8.error = present_error[15] = position[15] - robot_state.L8.goal_pos
             
             ### D-error 계산하기
-            robot_state.R1.d_error = float(position[0] - previous_position[0])
-            robot_state.R2.d_error = float(position[1] - previous_position[1])
-            robot_state.R3.d_error = float(position[2] - previous_position[2])
-            robot_state.R4.d_error = float(position[3] - previous_position[3])
-            robot_state.R5.d_error = float(position[4] - previous_position[4])
-            robot_state.R6.d_error = float(position[5] - previous_position[5])
-            robot_state.L1.d_error = float(position[6] - previous_position[6])
-            robot_state.L2.d_error = float(position[7] - previous_position[7])
-            robot_state.L3.d_error = float(position[8] - previous_position[8])
-            robot_state.L4.d_error = float(position[9] - previous_position[9])
-            robot_state.L5.d_error = float(position[10] - previous_position[10])
-            robot_state.L6.d_error = float(position[11] - previous_position[11])
+            robot_state.R1.d_error = float(present_error[0] - previous_error[0])
+            robot_state.R2.d_error = float(present_error[1] - previous_error[1])
+            robot_state.R3.d_error = float(present_error[2] - previous_error[2])
+            robot_state.R4.d_error = float(present_error[3] - previous_error[3])
+            robot_state.R5.d_error = float(present_error[4] - previous_error[4])
+            robot_state.R6.d_error = float(present_error[5] - previous_error[5])
+            robot_state.L1.d_error = float(present_error[6] - previous_error[6])
+            robot_state.L2.d_error = float(present_error[7] - previous_error[7])
+            robot_state.L3.d_error = float(present_error[8] - previous_error[8])
+            robot_state.L4.d_error = float(present_error[9] - previous_error[9])
+            robot_state.L5.d_error = float(present_error[10] - previous_error[10])
+            robot_state.L6.d_error = float(present_error[11] - previous_error[11])
 
-            robot_state.R7.d_error = float(position[12] - previous_position[12])
-            robot_state.R8.d_error = float(position[13] - previous_position[13])
-            robot_state.L7.d_error = float(position[14] - previous_position[14])
-            robot_state.L8.d_error = float(position[15] - previous_position[15])
+            robot_state.R7.d_error = float(present_error[12] - previous_error[12])
+            robot_state.R8.d_error = float(present_error[13] - previous_error[13])
+            robot_state.L7.d_error = float(present_error[14] - previous_error[14])
+            robot_state.L8.d_error = float(present_error[15] - previous_error[15])
         
             ### I-error 계산하기
-            robot_state.R1.i_error = max(-100, min(robot_state.R1.i_error + robot_state.R1.error, 100))
-            robot_state.R2.i_error = max(-100, min(robot_state.R2.i_error + robot_state.R2.error, 100))
-            robot_state.R3.i_error = max(-100, min(robot_state.R3.i_error + robot_state.R3.error, 100))
-            robot_state.R4.i_error = max(-100, min(robot_state.R4.i_error + robot_state.R4.error, 100))
-            robot_state.R5.i_error = max(-100, min(robot_state.R5.i_error + robot_state.R5.error, 100))
-            robot_state.R6.i_error = max(-100, min(robot_state.R6.i_error + robot_state.R6.error, 100))
-            robot_state.L1.i_error = max(-100, min(robot_state.L1.i_error + robot_state.L1.error, 100))
-            robot_state.L2.i_error = max(-100, min(robot_state.L2.i_error + robot_state.L2.error, 100))
-            robot_state.L3.i_error = max(-100, min(robot_state.L3.i_error + robot_state.L3.error, 100))
-            robot_state.L4.i_error = max(-100, min(robot_state.L4.i_error + robot_state.L4.error, 100))
-            robot_state.L5.i_error = max(-100, min(robot_state.L5.i_error + robot_state.L5.error, 100))
-            robot_state.L6.i_error = max(-100, min(robot_state.L6.i_error + robot_state.L6.error, 100))
+            robot_state.R1.i_error = max(-20, min(robot_state.R1.i_error + robot_state.R1.error, 20))
+            robot_state.R2.i_error = max(-20, min(robot_state.R2.i_error + robot_state.R2.error, 20))
+            robot_state.R3.i_error = max(-20, min(robot_state.R3.i_error + robot_state.R3.error, 20))
+            robot_state.R4.i_error = max(-20, min(robot_state.R4.i_error + robot_state.R4.error, 20))
+            robot_state.R5.i_error = max(-20, min(robot_state.R5.i_error + robot_state.R5.error, 20))
+            robot_state.R6.i_error = max(-20, min(robot_state.R6.i_error + robot_state.R6.error, 20))
+            robot_state.L1.i_error = max(-20, min(robot_state.L1.i_error + robot_state.L1.error, 20))
+            robot_state.L2.i_error = max(-20, min(robot_state.L2.i_error + robot_state.L2.error, 20))
+            robot_state.L3.i_error = max(-20, min(robot_state.L3.i_error + robot_state.L3.error, 20))
+            robot_state.L4.i_error = max(-20, min(robot_state.L4.i_error + robot_state.L4.error, 20))
+            robot_state.L5.i_error = max(-20, min(robot_state.L5.i_error + robot_state.L5.error, 20))
+            robot_state.L6.i_error = max(-20, min(robot_state.L6.i_error + robot_state.L6.error, 20))
 
-            robot_state.R7.i_error = max(-100, min(robot_state.R7.i_error + robot_state.R7.error, 100))
-            robot_state.R8.i_error = max(-100, min(robot_state.R8.i_error + robot_state.R8.error, 100))
-            robot_state.L7.i_error = max(-100, min(robot_state.L7.i_error + robot_state.L7.error, 100))
-            robot_state.L8.i_error = max(-100, min(robot_state.L8.i_error + robot_state.L8.error, 100))
+            robot_state.R7.i_error = max(-20, min(robot_state.R7.i_error + robot_state.R7.error, 20))
+            robot_state.R8.i_error = max(-20, min(robot_state.R8.i_error + robot_state.R8.error, 20))
+            robot_state.L7.i_error = max(-20, min(robot_state.L7.i_error + robot_state.L7.error, 20))
+            robot_state.L8.i_error = max(-20, min(robot_state.L8.i_error + robot_state.L8.error, 20))
 
-        for i in range(16):
-            previous_position[i] = position[i]
+        previous_error = present_error
 
         read_encoder_rate.sleep()
 
