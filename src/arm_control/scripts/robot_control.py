@@ -20,24 +20,6 @@ def msg_sub_seperate_msgs(robot_state: arm_robot_state):
     def processing(data :arm_robot_state) -> None:
         state_lock.acquire()
         robot_state.input_command = data.input_command
-        # robot_state.L1 = data.L1
-        # robot_state.L1 = data.L1
-        # robot_state.L2 = data.L2
-        # robot_state.L3 = data.L3
-        # robot_state.L4 = data.L4
-        # robot_state.L5 = data.L5
-        # robot_state.L6 = data.L6
-        # robot_state.L7 = data.L7
-        # robot_state.L8 = data.L8
-
-        # robot_state.R1 = data.R1
-        # robot_state.R2 = data.R2
-        # robot_state.R3 = data.R3
-        # robot_state.R4 = data.R4
-        # robot_state.R5 = data.R5
-        # robot_state.R6 = data.R6
-        # robot_state.R7 = data.R7
-        # robot_state.R8 = data.R8
 
         robot_state.L1.p_gain           = data.L1.p_gain
         robot_state.L1.i_gain           = data.L1.i_gain
