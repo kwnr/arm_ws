@@ -2,6 +2,7 @@
 
 import rospy
 import threading
+import numpy as np
 from arm_msgs.msg import arm_master_comm
 from arm_msgs.msg import arm_robot_state
 
@@ -213,8 +214,8 @@ def get_encoder_data(robot_state: arm_robot_state):
         else:
             return False
 
-    position = [0]*16
-    previous_position = [0.0]*16
+    position = np.array([0.0]*16)
+    previous_position = np.array([0.0]*16)
 
     read_encoder_rate = rospy.Rate(100)
 
