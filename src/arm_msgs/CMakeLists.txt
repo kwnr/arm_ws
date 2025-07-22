@@ -16,6 +16,7 @@ add_message_files(
   arm_dynamixel_state.msg
   arm_joint_state.msg
   arm_robot_state.msg
+  arm_master_comm_int.msg
 )
 
 generate_messages(
